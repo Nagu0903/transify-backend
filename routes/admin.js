@@ -68,14 +68,28 @@ router.get('/drivers', checkDB, async (req, res) => {
   }
 });
 
-// 4. Get All Loads
-// GET /api/admin/loads
-router.get('/loads', checkDB, async (req, res) => {
+// 5. Delete a Load
+// DELETE /api/admin/loads/:loadId
+router.delete('/loads/:loadId', checkDB, async (req, res) => {
   try {
-    const loads = await Load.find().sort({ createdAt: -1 });
-    res.json({ success: true, loads });
+    const load = await Load.findByIdAndDelete(req.params.loadId);
+    if (!load) return res.status(404).json({ success: false, message: 'Load not found' });
+    res.json({ success: true, message: 'Load deleted successfully' });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to fetch loads' });
+    res.status(500).json({ success: false, message: 'Failed to delete load' });
+  }
+});
+
+// 6. Block/Unblock a User
+// PUT /api/admin/users/:userId/block
+router.put('/users/:userId/block', checkDB, async (req, res) => {
+  try {
+    const { isBlocked } = req.body;
+    const user = await User.findByIdAndUpdate(req.params.userId, { isBlocked }, { new: true });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, message: `User ${isBlocked ? 'blocked' : 'unblocked'} successfully` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update user status' });
   }
 });
 
