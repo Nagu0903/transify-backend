@@ -114,15 +114,4 @@ router.get('/driver/:driverId', checkDB, async (req, res) => {
   }
 });
 
-// Get all Loads (Admin)
-router.get('/all', checkDB, async (req, res) => {
-  try {
-    const loads = await Load.find().sort({ createdAt: -1 });
-    res.json({ success: true, loads });
-  } catch (err) {
-    console.error('Fetch All Loads Error:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch all loads' });
-  }
-});
-
 module.exports = router;

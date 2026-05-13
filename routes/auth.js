@@ -125,30 +125,31 @@ router.post('/login', checkDB, async (req, res) => {
     console.error('Login Error:', err);
     res.status(500).json({ success: false, message: 'Server error during login', error: err.message });
   }
-});
-
-// Get all Users (Admin)
-router.get('/users', checkDB, async (req, res) => {
+// Reset Password API
+router.post('/reset-password', checkDB, async (req, res) => {
+  console.log('--- Reset Password Request Started ---');
   try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.json({ success: true, users });
-  } catch (err) {
-    console.error('Fetch Users Error:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch users' });
-  }
-});
+    const { phone, role, newPassword } = req.body;
 
-// Delete User (Admin)
-router.delete('/users/:id', checkDB, async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+    if (!phone || !role || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Phone, role, and new password are required' });
     }
-    res.json({ success: true, message: 'User deleted successfully' });
+
+    const user = await User.findOne({ phone, role });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Account not found with this phone and role' });
+    }
+
+    // Update password (User.js pre-save hook will hash it)
+    user.password = newPassword;
+    await user.save();
+
+    console.log('✅ Password Reset Successful for:', phone);
+    res.json({ success: true, message: 'Password reset successful' });
+
   } catch (err) {
-    console.error('Delete User Error:', err);
-    res.status(500).json({ success: false, message: 'Failed to delete user' });
+    console.error('Reset Password Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to reset password', error: err.message });
   }
 });
 
