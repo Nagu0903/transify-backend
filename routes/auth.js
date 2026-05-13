@@ -127,32 +127,62 @@ router.post('/login', checkDB, async (req, res) => {
   }
 });
 
-// Forgot Password API
+// Forgot Password API (Professional Implementation)
 router.post('/forgot-password', checkDB, async (req, res) => {
   console.log('--- Forgot Password Request Started ---');
   try {
-    const { phone, newPin, newPassword } = req.body;
-    const finalPassword = newPin || newPassword;
+    const { phone, newPin } = req.body;
 
-    if (!phone || !finalPassword) {
-      return res.status(400).json({ success: false, message: 'Phone and new password/pin are required' });
+    if (!phone || !newPin) {
+      return res.status(400).json({ success: false, message: 'Phone and new PIN are required' });
     }
 
-    // Find user by phone only (since phone is unique in our schema)
+    // Find user by phone only (phone is unique in schema)
     const user = await User.findOne({ phone });
     if (!user) {
       return res.status(404).json({ success: false, message: 'Account not found with this phone number' });
     }
 
     // Update password (User.js pre-save hook will hash it)
-    user.password = finalPassword;
+    user.password = newPin;
+    await user.save();
+
+    console.log('✅ Password Reset Successful for:', phone);
+    res.json({
+      success: true,
+      message: 'Password reset successful'
+    });
+
+  } catch (err) {
+    console.error('Forgot Password Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to reset password', error: err.message });
+  }
+});
+
+// Legacy Reset Password API (Keeping for compatibility if needed elsewhere)
+router.post('/reset-password', checkDB, async (req, res) => {
+  console.log('--- Reset Password Request Started ---');
+  try {
+    const { phone, role, newPassword } = req.body;
+
+    if (!phone || !role || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Phone, role, and new password are required' });
+    }
+
+    const user = await User.findOne({ phone, role });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Account not found with this phone and role' });
+    }
+
+    // Update password (User.js pre-save hook will hash it)
+    user.password = newPassword;
     await user.save();
 
     console.log('✅ Password Reset Successful for:', phone);
     res.json({ success: true, message: 'Password reset successful' });
 
   } catch (err) {
-    console.error('Forgot Password Error:', err);
+    console.error('Reset Password Error:', err);
     res.status(500).json({ success: false, message: 'Failed to reset password', error: err.message });
   }
 });
