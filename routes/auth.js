@@ -131,20 +131,21 @@ router.post('/login', checkDB, async (req, res) => {
 router.post('/forgot-password', checkDB, async (req, res) => {
   console.log('--- Forgot Password Request Started ---');
   try {
-    const { phone, newPin, role } = req.body;
+    const { phone, newPin, newPassword } = req.body;
+    const finalPassword = newPin || newPassword;
 
-    if (!phone || !newPin) {
-      return res.status(400).json({ success: false, message: 'Phone and new PIN are required' });
+    if (!phone || !finalPassword) {
+      return res.status(400).json({ success: false, message: 'Phone and new password/pin are required' });
     }
 
-    // Find user by phone (phone is unique in schema)
+    // Find user by phone only (since phone is unique in our schema)
     const user = await User.findOne({ phone });
     if (!user) {
       return res.status(404).json({ success: false, message: 'Account not found with this phone number' });
     }
 
     // Update password (User.js pre-save hook will hash it)
-    user.password = newPin;
+    user.password = finalPassword;
     await user.save();
 
     console.log('✅ Password Reset Successful for:', phone);
