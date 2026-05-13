@@ -98,4 +98,15 @@ router.get('/', checkDB, async (req, res) => {
   }
 });
 
+// 5. Get Loads by Driver ID
+// GET /api/loads/driver/:driverId
+router.get('/driver/:driverId', checkDB, async (req, res) => {
+  try {
+    const loads = await Load.find({ driverId: req.params.driverId }).sort({ createdAt: -1 });
+    res.json({ success: true, loads });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch accepted loads' });
+  }
+});
+
 module.exports = router;
