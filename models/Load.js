@@ -1,19 +1,23 @@
 const mongoose = require('mongoose');
 
 const loadSchema = new mongoose.Schema({
-  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  ownerName: { type: String, required: true },
-  ownerPhone: { type: String, required: true },
-  from: { type: String, required: true },
-  to: { type: String, required: true },
+  userId: { type: String, required: true }, // Owner who posted the load
+  fullName: { type: String, required: true },
+  phone: { type: String, required: true },
+  fromLocation: { type: String, required: true },
+  toLocation: { type: String, required: true },
+  truckType: { type: String, required: true },
   material: { type: String, required: true },
-  weight: { type: String, required: true },
-  vehicle: { type: String, required: true },
-  amount: { type: String, required: true },
+  price: { type: String, required: true },
+  weight: { type: String }, // Optional extra
   notes: { type: String },
   distance: { type: String },
-  status: { type: String, enum: ['Pending', 'Accepted', 'In Transit', 'Completed', 'Cancelled'], default: 'Pending' },
-  driverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  status: { 
+    type: String, 
+    enum: ['pending', 'accepted', 'completed', 'cancelled'], 
+    default: 'pending' 
+  },
+  driverId: { type: String }, // ID of driver who accepted
   driverName: { type: String },
   driverPhone: { type: String },
   createdAt: { type: Date, default: Date.now }
