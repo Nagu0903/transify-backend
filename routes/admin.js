@@ -15,18 +15,19 @@ const checkDB = (req, res, next) => {
   next();
 };
 
-// 1. Get Admin Dashboard Statistics
+// 1. Professional Admin Stats
 // GET /api/admin/stats
 router.get('/stats', checkDB, async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const totalDrivers = await User.countDocuments({ role: 'Driver' });
-    const totalLoadOwners = await User.countDocuments({ role: 'Load Owner' });
-    
-    const totalLoads = await Load.countDocuments();
-    const pendingLoads = await Load.countDocuments({ status: 'pending' });
-    const acceptedLoads = await Load.countDocuments({ status: 'accepted' });
-    const completedLoads = await Load.countDocuments({ status: 'completed' });
+    const [totalUsers, totalDrivers, totalLoadOwners, totalLoads, pendingLoads, acceptedLoads, completedLoads] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ role: 'Driver' }),
+      User.countDocuments({ role: 'Load Owner' }),
+      Load.countDocuments(),
+      Load.countDocuments({ status: 'pending' }),
+      Load.countDocuments({ status: 'accepted' }),
+      Load.countDocuments({ status: 'completed' })
+    ]);
 
     res.json({
       success: true,
@@ -46,18 +47,18 @@ router.get('/stats', checkDB, async (req, res) => {
   }
 });
 
-// 2. Get All Users
-// GET /api/admin/users
-router.get('/users', checkDB, async (req, res) => {
+// 2. Live Loads Monitoring
+// GET /api/admin/live-loads (Alias: /loads)
+router.get(['/live-loads', '/loads'], checkDB, async (req, res) => {
   try {
-    const users = await User.find({ role: 'Load Owner' }).sort({ createdAt: -1 });
-    res.json({ success: true, users });
+    const loads = await Load.find().sort({ createdAt: -1 });
+    res.json({ success: true, loads });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to fetch users' });
+    res.status(500).json({ success: false, message: 'Failed to fetch live loads' });
   }
 });
 
-// 3. Get All Drivers
+// 3. Drivers List
 // GET /api/admin/drivers
 router.get('/drivers', checkDB, async (req, res) => {
   try {
@@ -68,7 +69,49 @@ router.get('/drivers', checkDB, async (req, res) => {
   }
 });
 
-// 5. Delete a Load
+// 4. Load Owners List
+// GET /api/admin/loadowners (Alias: /users)
+router.get(['/loadowners', '/users'], checkDB, async (req, res) => {
+  try {
+    const users = await User.find({ role: 'Load Owner' }).sort({ createdAt: -1 });
+    res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch load owners' });
+  }
+});
+
+// 5. Specific Status Loads
+// GET /api/admin/pending
+router.get('/pending', checkDB, async (req, res) => {
+  try {
+    const loads = await Load.find({ status: 'pending' }).sort({ createdAt: -1 });
+    res.json({ success: true, loads });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch pending loads' });
+  }
+});
+
+// GET /api/admin/accepted
+router.get('/accepted', checkDB, async (req, res) => {
+  try {
+    const loads = await Load.find({ status: 'accepted' }).sort({ createdAt: -1 });
+    res.json({ success: true, loads });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch accepted loads' });
+  }
+});
+
+// GET /api/admin/completed
+router.get('/completed', checkDB, async (req, res) => {
+  try {
+    const loads = await Load.find({ status: 'completed' }).sort({ createdAt: -1 });
+    res.json({ success: true, loads });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch completed loads' });
+  }
+});
+
+// 6. Delete a Load
 // DELETE /api/admin/loads/:loadId
 router.delete('/loads/:loadId', checkDB, async (req, res) => {
   try {
@@ -80,9 +123,9 @@ router.delete('/loads/:loadId', checkDB, async (req, res) => {
   }
 });
 
-// 6. Block/Unblock a User
+// 7. Block/Unblock a User
 // PUT /api/admin/users/:userId/block
-router.put('/users/:userId/block', checkDB, async (req, res) => {
+router.put(['/users/:userId/block', '/loadowners/:userId/block'], checkDB, async (req, res) => {
   try {
     const { isBlocked } = req.body;
     const user = await User.findByIdAndUpdate(req.params.userId, { isBlocked }, { new: true });
