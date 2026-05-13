@@ -125,30 +125,33 @@ router.post('/login', checkDB, async (req, res) => {
     console.error('Login Error:', err);
     res.status(500).json({ success: false, message: 'Server error during login', error: err.message });
   }
-// Reset Password API
-router.post('/reset-password', checkDB, async (req, res) => {
-  console.log('--- Reset Password Request Started ---');
-  try {
-    const { phone, role, newPassword } = req.body;
+});
 
-    if (!phone || !role || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Phone, role, and new password are required' });
+// Forgot Password API
+router.post('/forgot-password', checkDB, async (req, res) => {
+  console.log('--- Forgot Password Request Started ---');
+  try {
+    const { phone, newPin, role } = req.body;
+
+    if (!phone || !newPin) {
+      return res.status(400).json({ success: false, message: 'Phone and new PIN are required' });
     }
 
-    const user = await User.findOne({ phone, role });
+    // Find user by phone (phone is unique in schema)
+    const user = await User.findOne({ phone });
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Account not found with this phone and role' });
+      return res.status(404).json({ success: false, message: 'Account not found with this phone number' });
     }
 
     // Update password (User.js pre-save hook will hash it)
-    user.password = newPassword;
+    user.password = newPin;
     await user.save();
 
     console.log('✅ Password Reset Successful for:', phone);
     res.json({ success: true, message: 'Password reset successful' });
 
   } catch (err) {
-    console.error('Reset Password Error:', err);
+    console.error('Forgot Password Error:', err);
     res.status(500).json({ success: false, message: 'Failed to reset password', error: err.message });
   }
 });
