@@ -17,19 +17,18 @@ const checkDB = (req, res, next) => {
 
 // Signup API
 router.post('/signup', checkDB, async (req, res) => {
+  console.log('--- Signup Request Started ---');
+  console.log('Request Body:', { ...req.body, password: '***', pin: '***' }); // Log body safely
+
   try {
-    console.log('Signup Request Received for phone:', req.body.phone);
     const { name, fullName, phone, password, pin, role, city, truckType, truckNumber } = req.body;
 
+    // Map fullName to name if provided, and pin to password
     const finalName = fullName || name;
     const finalPassword = pin || password;
 
     if (!finalName || !phone || !finalPassword || !role) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Missing required fields',
-        received: { name: !!finalName, phone: !!phone, password: !!finalPassword, role: !!role }
-      });
+      return res.status(400).json({ success: false, message: 'Missing required fields: name/fullName, phone, password/pin, and role are required.' });
     }
 
     // Check if user already exists
@@ -50,13 +49,6 @@ router.post('/signup', checkDB, async (req, res) => {
     });
 
     await user.save();
-    console.log('User saved successfully:', phone);
-
-    // Verify JWT Secret
-    if (!process.env.JWT_SECRET) {
-      console.error('CRITICAL: JWT_SECRET is not defined in environment variables');
-      return res.status(500).json({ success: false, message: 'Server configuration error (JWT)' });
-    }
 
     // Create JWT
     const token = jwt.sign(
@@ -64,6 +56,8 @@ router.post('/signup', checkDB, async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
     );
+
+    console.log('✅ Signup Successful for:', finalName, phone);
 
     res.status(201).json({
       success: true,
@@ -78,20 +72,17 @@ router.post('/signup', checkDB, async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Detailed Signup Error:', err);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error during signup', 
-      error: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
+    console.error('Signup Error:', err);
+    res.status(500).json({ success: false, message: 'Server error during signup', error: err.message });
   }
 });
 
 // Login API
 router.post('/login', checkDB, async (req, res) => {
+  console.log('--- Login Request Started ---');
+  console.log('Login Body:', { ...req.body, password: '***' });
+
   try {
-    console.log('Login Request Received for phone:', req.body.phone);
     const { phone, password, role } = req.body;
 
     // 1. Check if user exists
