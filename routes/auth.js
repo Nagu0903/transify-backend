@@ -18,7 +18,15 @@ const checkDB = (req, res, next) => {
 // Signup API
 router.post('/signup', checkDB, async (req, res) => {
   try {
-    const { name, phone, password, role, city, truckType, truckNumber } = req.body;
+    const { name, fullName, phone, password, pin, role, city, truckType, truckNumber } = req.body;
+
+    // Map fullName to name if provided, and pin to password
+    const finalName = fullName || name;
+    const finalPassword = pin || password;
+
+    if (!finalName || !phone || !finalPassword || !role) {
+      return res.status(400).json({ success: false, message: 'Missing required fields: name/fullName, phone, password/pin, and role are required.' });
+    }
 
     // Check if user already exists
     let user = await User.findOne({ phone });
@@ -28,9 +36,9 @@ router.post('/signup', checkDB, async (req, res) => {
 
     // Create new user
     user = new User({
-      name,
+      name: finalName,
       phone,
-      password,
+      password: finalPassword,
       role,
       city,
       truckType,

@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://transify-backend.onrender.com/api';
 
 async function runTests() {
   console.log('🚀 Starting Backend API Integration Tests...\n');
@@ -8,7 +8,7 @@ async function runTests() {
   try {
     // 1. Health Check
     console.log('Checking Health...');
-    const health = await axios.get('http://localhost:5000/api/test-db');
+    const health = await axios.get(`${BASE_URL}/test-db`);
     console.log('✅ Health Check:', health.data.status, '\n');
 
     const testId = Date.now();
