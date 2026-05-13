@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const loadRoutes = require('./routes/loads');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/loads', loadRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root endpoint for health check
 app.get('/', (req, res) => {
