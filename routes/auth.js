@@ -127,4 +127,29 @@ router.post('/login', checkDB, async (req, res) => {
   }
 });
 
+// Get all Users (Admin)
+router.get('/users', checkDB, async (req, res) => {
+  try {
+    const users = await User.find().sort({ createdAt: -1 });
+    res.json({ success: true, users });
+  } catch (err) {
+    console.error('Fetch Users Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch users' });
+  }
+});
+
+// Delete User (Admin)
+router.delete('/users/:id', checkDB, async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('Delete User Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete user' });
+  }
+});
+
 module.exports = router;
